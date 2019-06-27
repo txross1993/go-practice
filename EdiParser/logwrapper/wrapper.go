@@ -12,6 +12,7 @@ type Event struct {
 
 var (
 	invalidFileType = Event{1, "Invalid file type: %s"}
+	invalidKeyword  = Event{2, "Invalid string: %s, expecting one of %v"}
 )
 
 // StandardLogger enforced specific log message formats
@@ -21,6 +22,10 @@ type StandardLogger struct {
 
 func (l *StandardLogger) InvalidFileType(fileType string) {
 	l.Errorf(invalidFileType.message, fileType)
+}
+
+func (l *StandardLogger) InvalidKeyword(lit string, expected []string) {
+	l.Errorf(invalidKeyword.message, lit, expected)
 }
 
 // NewLogger initializes the standard logger

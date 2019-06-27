@@ -1,6 +1,7 @@
 package ediParser
 
 import (
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -12,6 +13,7 @@ const (
 	IDENT            // literals, batch number, names, etc.
 	EOF              // end of file
 	WS               // whitespace
+	NL               // New Line
 
 	keyword_beg
 	//Keywords
@@ -27,7 +29,6 @@ const (
 
 	// separator_beg
 	ASTERISK //*
-	TILDE    //~
 	// separator_end
 )
 
@@ -36,6 +37,7 @@ var tokens = [...]string{
 	IDENT:    "IDENT",
 	EOF:      "EOF",
 	WS:       " ",
+	NL:       "\\n",
 	ISA:      "ISA",
 	GS:       "GS",
 	ST:       "ST",  // Transaction header
@@ -45,7 +47,6 @@ var tokens = [...]string{
 	GE:       "GE",  // Record count
 	IEA:      "IEA",
 	ASTERISK: "*",
-	TILDE:    "~",
 }
 
 func (tok EdiToken) String() string {
@@ -60,6 +61,7 @@ func (tok EdiToken) String() string {
 }
 
 var keywords map[string]EdiToken
+var kwStrings []reflect.Value
 
 // var separators map[string]EdiToken
 
@@ -68,6 +70,8 @@ func init() {
 	for i := keyword_beg + 1; i < keyword_end; i++ {
 		keywords[tokens[i]] = i
 	}
+
+	kwStrings = reflect.ValueOf(keywords).MapKeys()
 
 	// separators = make(map[string]EdiToken)
 	// for i := separator_beg + 1; i < separator_end; i++ {
