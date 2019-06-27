@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/fsnotify/fsnotify"
-	"log"
-	"path/filepath"
+	"github.com/fsnotify/fsnotify" //Dependency on go get -u golang.org/x/sys/...
+	log "github.com/txross1993/go-practice/WatchFolderForFiles/logwrapper"
 )
 
 func main() {
+	li := log.NewLogger()
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(err)
+		li.Fatal(err)
 	}
 	defer watcher.Close()
 
@@ -21,22 +22,22 @@ func main() {
 				if !ok {
 					return
 				}
-				log.Println("event:", event)
+				li.Println("event:", event)
 				if event.Op&fsnotify.Create == fsnotify.Create {
-					log.Println("modified file:", event.Name)
+					li.Println("modified file:", event.Name)
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
 				}
-				log.Println("error:", err)
+				li.Println("error:", err)
 			}
 		}
 	}()
 
 	err = watcher.Add("foldertoWatch")
 	if err != nil {
-		log.Fatal(err)
+		li.Fatal(err)
 	}
 	<-done
 }
