@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/fsnotify/fsnotify" //Dependency on go get -u golang.org/x/sys/...
-	log "github.com/txross1993/go-practice/WatchFolderForFiles/logwrapper"
+	log "github.com/txross1993/go-practice/EdiParser/logwrapper"
 )
 
 func main() {
