@@ -30,6 +30,7 @@ func isNewLine(ch rune) bool {
 }
 
 func isIdent(ch rune) bool {
+	// A Data Element of an X12 may be alphanumeric, signed integers, numbers, decimals, or binary
 	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || (ch == '-') || isWhitespace(ch) || (ch == '.') 
 }
 
