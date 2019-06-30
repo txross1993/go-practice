@@ -10,43 +10,33 @@ type EdiToken int
 
 const (
 	ILLEGAL EdiToken = iota
-	IDENT            // literals, batch number, names, etc.
-	EOF              // end of file
-	WS               // whitespace
-	NL               // New Line
+	DELIM
+	IDENT // literals, batch number, names, etc.
+	EOF   // end of file
+	WS    // whitespace
+	NL    // New Line
 
 	keyword_beg
 	//Keywords
 	ISA
 	GS
-	ST
-	W12
-	N9
-	SE
 	GE
 	IEA
 	keyword_end
-
-	// separator_beg
-	ASTERISK //*
-	// separator_end
 )
 
 var tokens = [...]string{
-	ILLEGAL:  "ILLEGAL",
-	IDENT:    "IDENT",
-	EOF:      "EOF",
-	WS:       " ",
-	NL:       "\\n",
-	ISA:      "ISA",
-	GS:       "GS",
-	ST:       "ST",  // Transaction header
-	W12:      "W12", // Date information
-	N9:       "N9",  // Batch information
-	SE:       "SE",  // Transaction footer
-	GE:       "GE",  // Record count
-	IEA:      "IEA",
-	ASTERISK: "*",
+	ILLEGAL: "ILLEGAL",
+	DELIM:   "",
+	IDENT:   "IDENT",
+	EOF:     "EOF",
+	WS:      " ",
+	NL:      "\\n",
+	//Keywords
+	ISA: "ISA",
+	GS:  "GS",
+	GE:  "GE", // Record count
+	IEA: "IEA",
 }
 
 func (tok EdiToken) String() string {
@@ -72,11 +62,6 @@ func init() {
 	}
 
 	kwStrings = reflect.ValueOf(keywords).MapKeys()
-
-	// separators = make(map[string]EdiToken)
-	// for i := separator_beg + 1; i < separator_end; i++ {
-	// 	separators[tokens[i]] = i
-	// }
 }
 
 func LookupToken(ident string) EdiToken {

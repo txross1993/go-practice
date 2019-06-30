@@ -1,18 +1,27 @@
 package ediParser
 
 import (
+	"bytes"
 	"fmt"
-	log "github.com/txross1993/go-practice/EdiParser/logwrapper"
 	"io"
+
+	log "github.com/txross1993/go-practice/EdiParser/logwrapper"
 )
 
 var li *log.StandardLogger
 
-type EdiFile []*EdiStatement
+type EdiFile struct {
+	Segments []EdiSegment
+}
 
-type EdiStatement struct {
+type EdiField struct {
+	Position int
+	Literal  string
+}
+
+type EdiSegment struct {
 	Keyword string
-	Fields  []string
+	Fields  []EdiField
 }
 
 func (s *EdiStatement) String() string {
@@ -26,6 +35,8 @@ type Parser struct {
 		lit string   // last read literal
 		n   int      // buffer size (max=1)
 	}
+	elemDelim string
+	segDelim  string
 }
 
 func NewParser(r io.Reader) *Parser {
@@ -53,35 +64,83 @@ func (p *Parser) scan() (tok EdiToken, lit string) {
 // unscan pushes previously read token back onto the buffer.
 func (p *Parser) unscan() { p.buf.n = 1 }
 
-func (p *Parser) scanIgnoreAsterisk() (tok EdiToken, lit string) {
+func (p *Parser) scanIgnoreElemDelims() (tok EdiToken, lit string) {
 	tok, lit = p.scan()
-	for {
-		if tok == ASTERISK {
-			tok, lit = p.scan()
-		} else {
-			break
-		}
+	if lit == p.elemDelim {
+		tok, lit = p.scan()
 	}
 	return
 }
 
-func isBeginningOfFile(tok EdiToken) bool {
+func isISA(tok EdiToken) bool {
 	return tok == ISA
+}
+
+func isDelim(tok EdiToken) bool {
+	return tok == DELIM
+}
+
+func isIdent(tok EdiToken) bool {
+	return tok == IDENT
 }
 
 func isKeyword(lit string) bool {
 	return LookupToken(lit) != ILLEGAL
 }
 
-func (p *Parser) Parse() (EdiFile, error) {
-	tok, lit := p.scanIgnoreAsterisk()
-
-	// Beginning of EDI should be ISA keyword
-	if !isBeginningOfFile(tok) {
-		return nil, fmt.Errorf("Found %v, expected ISA", lit)
+func (p *Parser) findHeaderSetDelims(tok EdiToken) *EdiSegment {
+	// Construct header segment
+	headerSegment := &EdiSegment{
+		Keyword: tok.String(),
+		Fields:  []EdiField{},
 	}
 
-	var file EdiFile
+	tok, lit := p.scan()
+
+	assert(tok==DELIM)
+	p.elemDelim = lit
+
+	for {
+		var elementIndex = 1
+		// Now scan for segment delimiter
+		tok, lit := p.scanIgnoreElemDelims()
+
+		// Since we're ignoring elemental delimiters, any token that comes through as DELIM may be a segment delimiter
+		if isDelim(tok) {
+			var buf bytes.Buffer
+			buf.WriteString(lit)
+
+			// Is the next token GS?
+			tok, lit := p.scanIgnoreElemDelims()
+			if tok == GS {
+				p.segDelim, _ = buf.ReadString()
+				p.unscan()
+				break
+			} else if isDelim(tok) {
+				buf.WriteString(lit)
+			}
+		} else if isIdent(tok) {
+			field := &EdiField{Position: elementIndex, Literal: lit}
+			headerSegment.Fields = append(headerSegment.Fields, field)
+			elementIndex += 1
+		}
+	}
+
+	return headerSegment
+}
+
+func (p *Parser) Parse() (EdiFile, error) {
+	tok, lit := p.scan()
+
+	// Beginning of EDI should be ISA keyword
+	if isISA(tok) {
+		var file EdiFile
+		headerSegment := findHeaderSetDelims(tok)
+		EdiFile = append(file, headerSegment)
+	}
+
+
+	}
 
 	p.unscan()
 

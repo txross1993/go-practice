@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/azoner/gox12"
-	log "github.com/txross1993/go-practice/EdiParser/logwrapper"
 	"os"
 	"path/filepath"
+
+	"github.com/azoner/gox12"
+	log "github.com/txross1993/go-practice/EdiParser/logwrapper"
 )
 
 func main() {
 	li := log.NewLogger()
-	baseDir := "C:/Users/rossth/go/src/github.com/txross1993/go-practice/EdiParser/testFiles"
+	baseDir := "C:/Users/thear/go/src/github.com/txross1993/go-practice/EdiParser/testFiles"
 
 	files := []string{"sample945.txt", "tys_sample_945.txt"}
 
@@ -28,9 +29,11 @@ func main() {
 			fmt.Println(err)
 		}
 		for rs := range raw.GetSegments() {
+			fmt.Println(rs.Segment.SegmentId, rs.Segment.Composites)
 			for v := range rs.Segment.GetAllValues() {
-				fmt.Printf("Path: %v, Value: %v\n", v.X12Path, v.Value)
+				fmt.Println(v.X12Path, v.Value)
 			}
+
 			// if rs.Segment.SegmentId == "INS" {
 			// 	fmt.Println(rs)
 			// 	v, _, _ := rs.Segment.GetValue("INS01")

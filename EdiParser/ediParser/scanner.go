@@ -8,13 +8,18 @@ import (
 
 var eof = rune(0)
 
-// func isTilde(ch rune) bool {
-// 	return ch == '~'
-// }
+func isHeader(ch rune) bool {
+	headerMap := map[rune]interface{}{
+		'I': interface{},
+		'S': interface{},
+		'A': interface{},
+	}
 
-func isAsterisk(ch rune) bool {
-	return ch == '*'
+	_, ok := headerMap[ch]
+
+	return ok
 }
+
 
 func isWhitespace(ch rune) bool {
 	return ch == ' ' || ch == '\t'
@@ -25,13 +30,7 @@ func isNewLine(ch rune) bool {
 }
 
 func isIdent(ch rune) bool {
-	//Asterisk value: 42
-	// NL value: 10
-	// CR value: 13
-	// WS value: 32
-	// Tab value: 9
-
-	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || (ch == '-') || isWhitespace(ch) || (ch == '.') || (ch == '>')
+	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || (ch == '-') || isWhitespace(ch) || (ch == '.') 
 }
 
 type Scanner struct {
@@ -54,57 +53,35 @@ func (s *Scanner) unread() {
 	s.r.UnreadRune()
 }
 
-func (s *Scanner) scanAsterisks() (tok EdiToken, lit string) {
+// scanWhitespace consumes the current rune and all contiguous whitespace.
+func (s *Scanner) scanWhitespace() (tok EdiToken, lit string) {
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 
-	// Read every subsequent asterisk character into the buffer.
-	// Non-asterisks and EOF will cause the loop to exit.
+	// Read every subsequent whitespace character into the buffer.
+	// Non-whitespace characters and EOF will cause the loop to exit.
 	for {
 		if ch := s.read(); ch == eof {
 			break
-		} else if !isAsterisk(ch) {
+		} else if !isWhitespace(ch) {
 			s.unread()
 			break
 		} else {
 			buf.WriteRune(ch)
 		}
 	}
-	li.Debug("Scanned asterisk string: ", buf.String())
-	return ASTERISK, buf.String()
+
+	return WS, buf.String()
 }
 
-// func (s *Scanner) scanNewLine() (tok EdiToken, lit string) {
-// 	// Create a buffer and read the current character into it.
-
-// 	var buf bytes.Buffer
-// 	buf.WriteRune(s.read())
-
-// 	// Read every subsequent newline character into the buffer.
-// 	// Non-newlines and EOF will cause the loop to exit.
-// 	for {
-// 		if ch := s.read(); ch == eof {
-// 			break
-// 		} else if !isNewLine(ch) {
-// 			s.unread()
-// 			break
-// 		} else {
-// 			buf.WriteRune(ch)
-// 		}
-// 	}
-// 	li.Debug("Scanned new line string: ", buf.String())
-// 	return NL, buf.String()
-// }
-
-func (s *Scanner) scanIdent() (tok EdiToken, lit string) {
-	// Create a buffer and read the current character into it.package ediParser
-
+func (s *Scanner) scanIdent() (tok Token, lit string) {
+	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 
-	// Read every subsequent non-asterisk character into the buffer.
-	// Non-idents and EOF will cause the loop to exit.
+	// Read every subsequent ident character into the buffer.
+	// Non-ident characters and EOF will cause the loop to exit.
 	for {
 		if ch := s.read(); ch == eof {
 			break
@@ -112,47 +89,41 @@ func (s *Scanner) scanIdent() (tok EdiToken, lit string) {
 			s.unread()
 			break
 		} else {
-			buf.WriteRune(ch)
+			_, _ = buf.WriteRune(ch)
 		}
 	}
 
-	// If the string matches a keyword, return that keyword.
-	kw := LookupToken(buf.String())
-
-	li.Debug("Scanned identity string: ", buf.String())
-
+	// If the string matches a keyword then return that keyword.
+	kw := LookupToken(strings.ToUpper(buf.String()))
+	
 	if kw != ILLEGAL {
 		return kw, buf.String()
-	} else {
-		return IDENT, buf.String()
 	}
 
+	// Otherwise return as a regular identifier.
+	return IDENT, buf.String()
 }
 
+// Scan returns the next token and literal value.
 func (s *Scanner) Scan() (tok EdiToken, lit string) {
-	// Read the next rune
+	// Read the next rune.
 	ch := s.read()
 
-	// Consume contiguous asterisks
-	// If we see a letter or number, consume it as a keyword or identifier
-	if isAsterisk(ch) {
+	// If we see whitespace then consume all contiguous whitespace.
+	// If we see a letter then consume as an ident or reserved word.
+	// If we see a digit then consume as a number.
+	if isWhitespace(ch) {
 		s.unread()
-		return s.scanAsterisks()
+		return s.scanWhitespace()
 	} else if isIdent(ch) {
 		s.unread()
 		return s.scanIdent()
-	}
+	} 
 
-	// Otherwise read the character
-	if isNewLine(ch) {
-		return NL, "\\n"
-	}
-
-	switch ch {
-	case eof:
+	// Otherwise read the individual character.
+	if ch == eof {
 		return EOF, ""
-	default:
-		return ILLEGAL, string(ch)
 	}
 
+	return DELIM, string(ch)
 }

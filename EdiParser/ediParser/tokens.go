@@ -15,25 +15,39 @@ const (
 	WS               // whitespace
 	NL               // New Line
 
-	//Keywords
 	keyword_beg
+	//Keywords
 	ISA
 	GS
+	N1
+	ST
+	W12
+	N9
+	SE
 	GE
 	IEA
 	keyword_end
+
+	// separator_beg
+	ASTERISK //*
+	// separator_end
 )
 
 var tokens = [...]string{
-	ILLEGAL: "ILLEGAL",
-	IDENT:   "IDENT",
-	EOF:     "EOF",
-	WS:      " ",
-	NL:      "\\n",
-	ISA:     "ISA",
-	GS:      "GS",
-	GE:      "GE", // Record count
-	IEA:     "IEA",
+	ILLEGAL:  "ILLEGAL",
+	IDENT:    "IDENT",
+	EOF:      "EOF",
+	WS:       " ",
+	NL:       "\\n",
+	ISA:      "ISA",
+	GS:       "GS",
+	ST:       "ST",  // Transaction header
+	W12:      "W12", // Date information
+	N9:       "N9",  // Batch information
+	SE:       "SE",  // Transaction footer
+	GE:       "GE",  // Record count
+	IEA:      "IEA",
+	ASTERISK: "*",
 }
 
 func (tok EdiToken) String() string {
@@ -59,6 +73,11 @@ func init() {
 	}
 
 	kwStrings = reflect.ValueOf(keywords).MapKeys()
+
+	// separators = make(map[string]EdiToken)
+	// for i := separator_beg + 1; i < separator_end; i++ {
+	// 	separators[tokens[i]] = i
+	// }
 }
 
 func LookupToken(ident string) EdiToken {
