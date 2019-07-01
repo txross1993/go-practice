@@ -29,9 +29,10 @@ func main() {
 			fmt.Println(err)
 		}
 		for rs := range raw.GetSegments() {
-			fmt.Println(rs.Segment.SegmentId, rs.Segment.Composites)
+			fmt.Println("SegmentId :", rs.Segment.SegmentId,
+				"Composites: ", rs.Segment.Composites)
 			for v := range rs.Segment.GetAllValues() {
-				fmt.Println(v.X12Path, v.Value)
+				fmt.Println(v.X12Path.SegmentId, v.X12Path.ElementIdx, v.X12Path.SubelementIdx, v.Value)
 			}
 
 			// if rs.Segment.SegmentId == "INS" {
